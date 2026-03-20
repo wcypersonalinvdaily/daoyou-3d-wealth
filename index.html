@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>道友 · 财富仪表盘</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Noto+Sans+SC:wght@200;300;400;500;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap');
+
+:root {
+  --ink: #0b0e14;
+  --surface: #10141c;
+  --card: rgba(255,255,255,0.025);
+  --border: rgba(255,255,255,0.06);
+  --border-hi: rgba(255,255,255,0.12);
+  --text: rgba(255,255,255,0.88);
+  --text2: rgba(255,255,255,0.38);
+  --text3: rgba(255,255,255,0.18);
+  --accent: #64ffda;
+  --accent2: #818cf8;
+  --accent-dim: rgba(100,255,218,0.12);
+  --green: #4ade80;
+  --red: #f87171;
+  --amber: #fbbf24;
+  --blue: #60a5fa;
+  --r: 10px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ink);
+  font-family: 'Noto Sans SC', 'Outfit', sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#bg { position:fixed; inset:0; z-index:0; pointer-events:none; }
+.page { position:relative; z-index:1; max-width:1120px; margin:0 auto; padding:40px 24px 100px; }
+
+/* HEADER */
+.hd { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:48px; flex-wrap:wrap; gap:12px; }
+.hd h1 { font-family:'Zen Kaku Gothic New','Noto Sans SC',sans-serif; font-weight:300; font-size:1.6rem; color:var(--text); letter-spacing:0.15em; }
+.hd h1 em { font-style:normal; color:var(--accent); font-weight:500; }
+.hd .dao { font-size:0.82rem; color:var(--text3); letter-spacing:0.4em; font-weight:300; }
+
+/* CONNECTOR */
+.connector { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:32px; padding:14px 18px; background:var(--card); border:1px solid var(--border); border-radius:var(--r); }
+.connector input { flex:1; min-width:160px; padding:7px 12px; background:rgba(0,0,0,0.35); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:0.82rem; font-family:'Outfit',sans-serif; outline:none; transition:border 0.3s; }
+.connector input:focus { border-color:var(--accent); }
+.connector input::placeholder { color:var(--text3); }
+.btn { padding:7px 16px; border-radius:6px; font-size:0.78rem; font-weight:500; font-family:'Outfit',sans-serif; cursor:pointer; border:1px solid var(--border); background:var(--card); color:var(--text2); letter-spacing:0.04em; transition:all 0.25s; }
+.btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+.btn-g { border-color:rgba(74,222,128,0.3); color:var(--green); }
+.btn-g:hover { background:rgba(74,222,128,0.08); }
+.btn-m { border-color:rgba(129,140,248,0.3); color:var(--accent2); }
+.btn-m:hover { background:rgba(129,140,248,0.08); }
+#status { font-size:0.75rem; padding:4px 10px; border-radius:4px; display:none; }
+#status.show { display:inline-block; }
+#status.ok { color:var(--green); background:rgba(74,222,128,0.08); }
+#status.err { color:var(--red); background:rgba(248,113,113,0.08); }
+#status.info { color:var(--blue); background:rgba(96,165,250,0.08); }
+
+/* TOOLBAR */
+.toolbar { display:flex; gap:8px; margin-bottom:28px; flex-wrap:wrap; align-items:center; }
+.toolbar .spacer { flex:1; }
+.toolbar .meta { font-size:0.72rem; color:var(--text3); font-family:'Outfit'; }
+
+/* FX RATE */
+.fx-row { display:flex; gap:12px; align-items:center; margin-bottom:32px; padding:12px 18px; background:var(--card); border:1px solid var(--border); border-radius:var(--r); flex-wrap:wrap; }
+.fx-row label { font-size:0.8rem; color:var(--text2); white-space:nowrap; }
+.fx-row input { width:90px; padding:6px 10px; background:rgba(0,0,0,0.35); border:1px solid var(--border); border-radius:6px; color:var(--accent); font-size:0.9rem; font-family:'Outfit'; font-weight:600; text-align:center; outline:none; }
+.fx-row input:focus { border-color:var(--accent); }
+.fx-row .fx-note { font-size:0.72rem; color:var(--text3); }
+
+/* HERO */
+.hero { text-align:center; margin-bottom:48px; padding:48px 20px; position:relative; }
+.hero::before { content:''; position:absolute; inset:0; border-radius:20px; background:radial-gradient(ellipse at 50% 40%, rgba(100,255,218,0.04) 0%, transparent 65%); pointer-events:none; }
+.hero .label { font-size:0.82rem; color:var(--text3); letter-spacing:0.35em; font-weight:300; text-transform:uppercase; }
+.hero .amount { font-family:'Outfit',sans-serif; font-size:3.6rem; font-weight:200; color:#fff; margin:14px 0 6px; letter-spacing:-0.02em; text-shadow:0 0 80px rgba(100,255,218,0.15); }
+.hero .amount .currency { font-size:1.8rem; color:var(--text2); font-weight:300; vertical-align:top; margin-right:4px; }
+.hero .sub { font-size:0.9rem; font-weight:400; }
+.hero .sub.up { color:var(--green); }
+.hero .sub.down { color:var(--red); }
+
+/* DONUT + CARDS */
+.chart-row { display:flex; justify-content:center; align-items:center; gap:40px; margin-bottom:44px; flex-wrap:wrap; }
+.donut-wrap { position:relative; width:200px; height:200px; }
+.donut-wrap svg { width:100%; height:100%; transform:rotate(-90deg); }
+.donut-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
+.donut-center .dc-val { font-family:'Outfit'; font-size:1.4rem; font-weight:600; color:var(--accent); }
+.donut-center .dc-lbl { font-size:0.7rem; color:var(--text3); letter-spacing:0.1em; }
+.legend { display:flex; flex-direction:column; gap:10px; }
+.legend-item { display:flex; align-items:center; gap:10px; }
+.legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.legend-name { font-size:0.82rem; color:var(--text2); min-width:100px; }
+.legend-val { font-family:'Outfit'; font-size:0.85rem; font-weight:500; }
+.legend-pct { font-size:0.72rem; color:var(--text3); margin-left:4px; }
+
+.dist { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:12px; margin-bottom:40px; }
+.dist-card { padding:22px 20px; border-radius:var(--r); background:var(--card); border:1px solid var(--border); position:relative; overflow:hidden; transition:border-color 0.3s, transform 0.3s; }
+.dist-card:hover { border-color:var(--border-hi); transform:translateY(-2px); }
+.dist-card .bar { position:absolute; bottom:0; left:0; width:100%; height:3px; opacity:0.5; }
+.dist-card .lbl { font-size:0.75rem; color:var(--text2); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.dist-card .val { font-family:'Outfit'; font-size:1.35rem; font-weight:600; margin-bottom:3px; }
+.dist-card .pct { font-size:0.72rem; color:var(--text3); }
+
+/* SECTION */
+.sec { margin-bottom:40px; }
+.sec-title { font-family:'Zen Kaku Gothic New','Noto Sans SC',sans-serif; font-size:0.88rem; font-weight:400; color:var(--text2); letter-spacing:0.15em; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+
+/* TABLE */
+.tw { overflow-x:auto; border-radius:var(--r); border:1px solid var(--border); background:rgba(0,0,0,0.2); }
+table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+thead th { text-align:left; padding:11px 14px; background:rgba(255,255,255,0.02); color:var(--text2); font-size:0.72rem; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; border-bottom:1px solid var(--border); white-space:nowrap; }
+td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.025); white-space:nowrap; }
+tr:hover td { background:rgba(255,255,255,0.015); }
+.num { text-align:right; font-family:'Outfit'; font-variant-numeric:tabular-nums; }
+.green { color:var(--green); } .red { color:var(--red); }
+td[contenteditable="true"] { cursor:text; outline:none; border-radius:4px; transition:all 0.2s; }
+td[contenteditable="true"]:hover { background:rgba(100,255,218,0.04) !important; }
+td[contenteditable="true"]:focus { background:rgba(100,255,218,0.06) !important; box-shadow:inset 0 0 0 1px rgba(100,255,218,0.3); }
+.tag { display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.68rem; font-weight:500; }
+.tag-cspx { background:rgba(74,222,128,0.1); color:var(--green); }
+.tag-csndx { background:rgba(96,165,250,0.1); color:var(--blue); }
+.tag-signal { background:rgba(251,191,36,0.1); color:var(--amber); }
+.tag-extra { background:rgba(255,255,255,0.04); color:var(--text2); }
+.total-row td { font-weight:600; border-top:1.5px solid var(--border-hi); color:var(--accent); }
+
+/* ALLOCATION */
+.alloc-bars { display:flex; flex-direction:column; gap:14px; }
+.alloc-row { display:flex; align-items:center; gap:12px; }
+.alloc-label { width:80px; font-size:0.8rem; color:var(--text2); flex-shrink:0; }
+.alloc-bg { flex:1; height:26px; background:rgba(255,255,255,0.03); border-radius:6px; position:relative; overflow:hidden; border:1px solid var(--border); }
+.alloc-fill { height:100%; border-radius:5px; transition:width 0.8s cubic-bezier(0.4,0,0.2,1); display:flex; align-items:center; justify-content:flex-end; padding-right:8px; }
+.alloc-fill span { font-size:0.72rem; font-weight:600; font-family:'Outfit'; text-shadow:0 1px 3px rgba(0,0,0,0.5); }
+.alloc-target { position:absolute; top:0; height:100%; width:1.5px; background:rgba(255,255,255,0.35); }
+.alloc-target::after { content:attr(data-t); position:absolute; top:-17px; left:50%; transform:translateX(-50%); font-size:0.6rem; color:var(--text3); white-space:nowrap; }
+.alloc-diff { width:80px; text-align:right; font-size:0.78rem; font-family:'Outfit'; font-weight:500; flex-shrink:0; }
+
+/* TD */
+.td-dot { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; font-weight:600; font-size:0.8rem; font-family:'Outfit'; }
+.td-0 { background:rgba(255,255,255,0.04); color:var(--text3); }
+.td-low { background:rgba(251,191,36,0.12); color:var(--amber); border:1px solid rgba(251,191,36,0.25); }
+.td-hi { background:rgba(248,113,113,0.15); color:var(--red); border:1px solid rgba(248,113,113,0.25); }
+.td-9 { background:rgba(248,113,113,0.25); color:#fca5a5; border:1px solid rgba(248,113,113,0.4); animation:p9 2s infinite; }
+@keyframes p9 { 0%,100%{box-shadow:0 0 6px rgba(248,113,113,0.2)} 50%{box-shadow:0 0 16px rgba(248,113,113,0.4)} }
+.dd-bar { width:50px; height:5px; background:rgba(255,255,255,0.06); border-radius:3px; display:inline-block; vertical-align:middle; margin-right:5px; }
+.dd-fill { height:100%; border-radius:3px; }
+
+/* MONTHLY */
+.mgrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; }
+.mcard { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px; text-align:center; transition:border-color 0.3s; }
+.mcard:hover { border-color:var(--border-hi); }
+.mcard .mc-lbl { font-size:0.72rem; color:var(--text3); margin-bottom:5px; letter-spacing:0.06em; }
+.mcard .mc-val { font-family:'Outfit'; font-size:1.05rem; font-weight:600; }
+
+.foot { text-align:center; margin-top:50px; }
+.foot p { font-size:0.72rem; color:var(--text3); letter-spacing:0.25em; font-weight:300; }
+
+/* MODAL */
+.modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+.modal-bg.show { display:flex; }
+.modal { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:28px; max-width:460px; width:90%; }
+.modal h3 { font-size:0.95rem; color:var(--accent); margin-bottom:14px; font-weight:500; }
+.modal p { font-size:0.82rem; color:var(--text2); line-height:1.65; margin-bottom:10px; }
+.modal code { background:rgba(100,255,218,0.08); padding:1px 6px; border-radius:4px; font-size:0.8rem; color:var(--accent); }
+
+@media(max-width:700px) {
+  .hero .amount { font-size:2.4rem; }
+  .dist { grid-template-columns:repeat(2,1fr); }
+  table { font-size:0.74rem; }
+  th,td { padding:8px 8px; }
+  .connector,.fx-row { flex-direction:column; align-items:stretch; }
+}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<div class="page">
+  <div class="hd">
+    <h1><em>道友</em> · 财富仪表盘</h1>
+    <span class="dao">大 道 至 简</span>
+  </div>
+
+  <div class="connector">
+    <span style="font-size:0.8rem;color:var(--text3)">Google Sheet</span>
+    <input type="text" id="sheetUrl" placeholder="粘贴 Sheet URL 或 ID">
+    <input type="text" id="apiKey" placeholder="API Key (可选)" style="max-width:180px;">
+    <button class="btn" onclick="connectSheet()">连接</button>
+    <button class="btn" onclick="pullData()">拉取</button>
+    <button class="btn btn-m" onclick="showPush()">推送说明</button>
+    <span id="status"></span>
+  </div>
+
+  <div class="fx-row">
+    <label>USD/SGD 汇率</label>
+    <input type="number" id="fxRate" value="1.277" step="0.001" onchange="renderAll()">
+    <span class="fx-note">股票以USD计价，自动换算为SGD计入净资产</span>
+    <span style="flex:1"></span>
+    <button class="btn" onclick="fetchFX()">实时汇率</button>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn" onclick="addHolding()">+ 新增</button>
+    <button class="btn" onclick="fetchLivePrices()" id="liveBtn" style="border-color:rgba(100,255,218,0.4);color:var(--accent)">⟳ 刷新行情</button>
+    <button class="btn btn-g" onclick="saveLocal()">保存</button>
+    <button class="btn" onclick="loadLocal()">加载</button>
+    <button class="btn" onclick="exportJSON()">导出</button>
+    <span class="spacer"></span>
+    <span class="meta" id="lastUp">数据截至 2026-03-05</span>
+  </div>
+
+  <div class="hero">
+    <div class="label">净 资 产</div>
+    <div class="amount" id="heroAmt"><span class="currency">SGD</span>$0</div>
+    <div class="sub up" id="heroSub">股票盈利 +SGD $541</div>
+  </div>
+
+  <div class="chart-row">
+    <div class="donut-wrap">
+      <svg viewBox="0 0 200 200" id="donut"></svg>
+      <div class="donut-center">
+        <div class="dc-val" id="dcVal">$159K</div>
+        <div class="dc-lbl">SGD</div>
+      </div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="dist" id="distCards"></div>
+
+  <div class="sec">
+    <div class="sec-title">持仓明细 · USD计价 → SGD换算</div>
+    <div class="tw">
+      <table><thead><tr>
+        <th>#</th><th>券商</th><th>标的</th><th>Ticker</th><th>组别</th>
+        <th class="num">数量</th><th class="num">现价(USD)</th>
+        <th class="num">市值(USD)</th><th class="num">市值(SGD)</th>
+        <th class="num">均价</th><th class="num">盈亏(USD)</th>
+        <th class="num">占比</th><th></th>
+      </tr></thead><tbody id="hBody"></tbody></table>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">仓位配置</div>
+    <div class="alloc-bars" id="allocBars"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">九转信号 · TD Sequential</div>
+    <div class="tw">
+      <table><thead><tr><th>代码</th><th>权重</th><th class="num">现价</th><th>九转</th><th>护城河</th><th>距高点</th><th>建议</th></tr></thead>
+      <tbody id="tdBody"></tbody></table>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">月度配置 · SGD 22,400</div>
+    <div class="mgrid" id="mGrid"></div>
+  </div>
+
+  <div class="foot"><p>大道至简 · DAOYOU WEALTH v3.0</p></div>
+</div>
+
+<div class="modal-bg" id="pushModal">
+  <div class="modal">
+    <h3>Google Sheet 集成说明</h3>
+    <p><strong>实时行情（推荐）：</strong>在你的 Google Sheet 中创建一个 <code>LivePrices</code> 标签页，A列放代码，B列用 <code>=GOOGLEFINANCE("NASDAQ:MSFT","price")</code> 公式。连接Sheet后点「刷新行情」即可自动读取。</p>
+    <p><strong>直接获取：</strong>仪表盘会优先尝试 Yahoo Finance API 直接拉取，无需额外配置。如果被CORS限制则自动回退到Sheet代理。</p>
+    <p><strong>推送数据：</strong>方法一：<code>扩展程序 → Apps Script</code> 部署 Web App。方法二：「导出」JSON 手动粘贴。方法三：配合 <code>wang_investment_monitor_v4.gs</code>。</p>
+    <button class="btn" onclick="document.getElementById('pushModal').classList.remove('show')" style="margin-top:12px">知道了</button>
+  </div>
+</div>
+
+<script>
+// ═══ DATA ═══
+const D = {
+  fx: 1.277,
+  wealth: [
+    { name:'股票投资', amountSGD:0, icon:'📈', color:'#4ade80', auto:true },
+    { name:'现金存款(GXS)', amountSGD:0, icon:'🏦', color:'#60a5fa', auto:false },
+    { name:'银砖', amountSGD:0, icon:'🥇', color:'#fbbf24', auto:false },
+    { name:'MOMO房产基金', amountSGD:0, icon:'🏠', color:'#a78bfa', auto:false },
+    { name:'其他资产', amountSGD:0, icon:'📊', color:'#f472b6', auto:false },
+  ],
+  holdings: [
+    { broker:'Tiger',  name:'SPY',      group:'CSPX组', qty:18.9, price:685.13, avg:684.29, ticker:'SPY' },
+    { broker:'IBKR',   name:'CSPX',     group:'CSPX组', qty:28.3, price:733.48, avg:734.12, ticker:'LON:CSPX' },
+    { broker:'MOOMOO', name:'伯克希尔',  group:'额外',   qty:3,    price:487.48, avg:491.64, ticker:'BRK.B' },
+    { broker:'IBKR',   name:'MSFT',     group:'信号交易',qty:79,   price:405.20, avg:433.12, ticker:'MSFT' },
+    { broker:'IBKR',   name:'伯克希尔',  group:'额外',   qty:38,   price:487.48, avg:478.90, ticker:'BRK.B' },
+    { broker:'IBKR',   name:'COINBASE', group:'额外',   qty:26,   price:208.93, avg:203.98, ticker:'COIN' },
+    { broker:'IBKR',   name:'GOOGL',    group:'信号交易',qty:17,   price:303.13, avg:301.06, ticker:'GOOGL' },
+  ],
+  alloc: [
+    { name:'CSPX组', target:60, color:'#4ade80' },
+    { name:'CSNDX组', target:20, color:'#60a5fa' },
+    { name:'信号交易', target:20, color:'#fbbf24' },
+  ],
+  td: [
+    { code:'CSPX', w:.30, price:733.77, td:3, moat:'极高', dd:.174, adv:'持守待机' },
+    { code:'BRK.B', w:.15, price:487.48, td:3, moat:'极高', dd:.101, adv:'持守待机' },
+    { code:'XLV', w:.10, price:157.05, td:2, moat:'高', dd:.022, adv:'持守待机' },
+    { code:'MAGS', w:.15, price:62.23, td:5, moat:'极高', dd:.104, adv:'持守待机' },
+    { code:'MSFT', w:.08, price:405.20, td:0, moat:'极高', dd:.271, adv:'持守待机' },
+    { code:'COST', w:.05, price:1006.74, td:0, moat:'极高', dd:.057, adv:'持守待机' },
+    { code:'AAPL', w:.04, price:262.52, td:4, moat:'极高', dd:.090, adv:'持守待机' },
+    { code:'NVDA', w:.04, price:183.04, td:5, moat:'高', dd:.137, adv:'持守待机' },
+    { code:'META', w:.03, price:667.73, td:0, moat:'高', dd:.161, adv:'持守待机' },
+    { code:'GOOGL', w:.03, price:303.13, td:3, moat:'高', dd:.131, adv:'持守待机' },
+    { code:'COIN', w:.03, price:208.93, td:0, moat:'中', dd:.530, adv:'持守待机' },
+  ],
+  monthly: [
+    { label:'CSPX定投', amount:10800, color:'#4ade80' },
+    { label:'CSNDX定投', amount:3600, color:'#60a5fa' },
+    { label:'信号预留', amount:3640, color:'#fbbf24' },
+    { label:'MooMoo储蓄', amount:0, color:'#a78bfa' },
+    { label:'GXS储蓄', amount:0, color:'#64ffda' },
+  ],
+  sheetId:'', apiKey:''
+};
+
+// ═══ GOOGLE SHEETS ═══
+function extractId(s){const m=s.match(/\/d\/([a-zA-Z0-9_-]+)/);return m?m[1]:(/^[a-zA-Z0-9_-]{20,}$/.test(s.trim())?s.trim():'');}
+function stat(msg,t){const e=document.getElementById('status');e.textContent=msg;e.className='show '+t;setTimeout(()=>e.classList.remove('show'),4000);}
+function connectSheet(){const id=extractId(document.getElementById('sheetUrl').value);if(!id){stat('无效ID','err');return;}D.sheetId=id;D.apiKey=document.getElementById('apiKey').value.trim();stat('✓ 已连接','ok');}
+async function pullData(){
+  if(!D.sheetId){stat('先连接Sheet','err');return;}stat('拉取中...','info');
+  try{
+    if(D.apiKey){
+      const base=`https://sheets.googleapis.com/v4/spreadsheets/${D.sheetId}/values`;
+      const r=await fetch(`${base}/Sheet1!A4:J10?key=${D.apiKey}`);if(!r.ok)throw new Error('API '+r.status);
+      const j=await r.json();if(j.values)D.holdings=j.values.map(r=>({broker:r[1]||'',name:r[2]||'',group:gg(r[2]||''),qty:+r[3]||0,price:+r[4]||0,avg:+r[6]||0}));
+    }else{
+      const r=await fetch(`https://docs.google.com/spreadsheets/d/${D.sheetId}/gviz/tq?tqx=out:csv&sheet=Sheet1`);if(!r.ok)throw new Error('Sheet未公开');
+      const csv=await r.text();const rows=csv.split('\n').map(l=>l.split(',').map(c=>c.replace(/^"|"$/g,'').trim()));
+      D.holdings=[];for(let i=2;i<rows.length;i++){const r=rows[i];if(!r[0]||r[0]==='合计'||r[0]==='Sold'||r[0]==='股票名称')continue;D.holdings.push({broker:r[1]||'',name:r[2]||'',group:gg(r[2]||''),qty:+r[3]||0,price:+r[4]||0,avg:+r[6]||0});}
+    }
+    renderAll();stat('✓ 已同步','ok');document.getElementById('lastUp').textContent='更新于 '+new Date().toLocaleString('zh-CN');
+  }catch(e){stat('✗ '+e.message,'err');}
+}
+function gg(n){const u=n.toUpperCase();if(u.includes('SPY')||u.includes('CSPX')||u.includes('标普'))return'CSPX组';if(u.includes('CSNDX')||u.includes('QQQ'))return'CSNDX组';if(u.includes('MSFT')||u.includes('AAPL')||u.includes('GOOGL')||u.includes('MAGS')||u.includes('微软'))return'信号交易';return'额外';}
+function showPush(){document.getElementById('pushModal').classList.add('show');}
+async function fetchFX(){try{stat('获取汇率...','info');const r=await fetch('https://open.er-api.com/v6/latest/USD');const j=await r.json();if(j.rates?.SGD){D.fx=j.rates.SGD;document.getElementById('fxRate').value=D.fx.toFixed(4);renderAll();stat('✓ USD/SGD '+D.fx.toFixed(4),'ok');}}catch(e){stat('汇率获取失败','err');}}
+
+// ═══ LIVE PRICE FETCH ═══
+// Strategy: Use a public Google Sheet with GOOGLEFINANCE() formulas as a proxy.
+// The dashboard creates a temporary sheet or uses an existing one.
+// Fallback: Yahoo Finance API (unofficial) or manual ticker lookup.
+
+// Ticker mapping: holdings name → Google Finance compatible ticker
+const TICKER_MAP = {
+  'SPY':'NYSEARCA:SPY', 'CSPX':'LON:CSPX', 'BRK.B':'NYSE:BRK.B', 'MSFT':'NASDAQ:MSFT',
+  'COINBASE':'NASDAQ:COIN', 'COIN':'NASDAQ:COIN', 'GOOGL':'NASDAQ:GOOGL', 'AAPL':'NASDAQ:AAPL',
+  'NVDA':'NASDAQ:NVDA', 'META':'NASDAQ:META', 'MAGS':'NYSEARCA:MAGS', 'COST':'NASDAQ:COST',
+  'XLV':'NYSEARCA:XLV', '伯克希尔':'NYSE:BRK.B', '微软':'NASDAQ:MSFT', '标普500':'NYSEARCA:SPY'
+};
+
+function getGFTicker(h) {
+  // Use explicit ticker field first, then map by name
+  if (h.ticker) {
+    // Add exchange prefix if missing
+    const t = h.ticker.toUpperCase();
+    if (t.includes(':')) return t;
+    for (const [k,v] of Object.entries(TICKER_MAP)) { if (k.toUpperCase()===t) return v; }
+    return t;
+  }
+  const n = h.name.toUpperCase();
+  for (const [k,v] of Object.entries(TICKER_MAP)) { if (n.includes(k.toUpperCase())) return v; }
+  return h.name;
+}
+
+async function fetchLivePrices() {
+  const btn = document.getElementById('liveBtn');
+  btn.textContent = '⟳ 获取中...'; btn.style.opacity = '0.5';
+  stat('正在获取实时行情...','info');
+
+  // Collect unique tickers
+  const allTickers = new Map();
+  D.holdings.forEach((h,i) => {
+    const t = getGFTicker(h);
+    if (!allTickers.has(t)) allTickers.set(t, []);
+    allTickers.get(t).push(i);
+  });
+  // Also fetch for TD watchlist
+  D.td.forEach((t,i) => {
+    const ticker = TICKER_MAP[t.code.toUpperCase()] || t.code;
+    if (!allTickers.has(ticker)) allTickers.set(ticker, []);
+  });
+
+  let updated = 0, failed = 0;
+
+  // Method 1: Try Yahoo Finance v8 API (works for US stocks)
+  const yahooTickers = [];
+  const tickerEntries = [...allTickers.entries()];
+
+  for (const [gfTicker, holdingIdxs] of tickerEntries) {
+    // Convert Google Finance ticker to Yahoo format
+    let yTicker = gfTicker.replace('NASDAQ:','').replace('NYSE:','').replace('NYSEARCA:','');
+    if (gfTicker.includes('LON:')) yTicker = gfTicker.replace('LON:','') + '.L';
+    yahooTickers.push({ gf: gfTicker, yh: yTicker, idxs: holdingIdxs });
+  }
+
+  // Batch fetch via Yahoo Finance (all tickers at once)
+  const yhSymbols = yahooTickers.map(t => t.yh).join(',');
+  try {
+    const r = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(yhSymbols)}&fields=regularMarketPrice,symbol`);
+    if (r.ok) {
+      const j = await r.json();
+      const quotes = j?.quoteResponse?.result || [];
+      const priceMap = {};
+      quotes.forEach(q => { if (q.regularMarketPrice) priceMap[q.symbol] = q.regularMarketPrice; });
+
+      // Apply prices to holdings
+      for (const { gf, yh, idxs } of yahooTickers) {
+        const price = priceMap[yh];
+        if (price) {
+          idxs.forEach(i => { if (i < D.holdings.length) { D.holdings[i].price = price; } });
+          // Also update TD watchlist
+          const code = gf.split(':').pop();
+          const tdItem = D.td.find(t => t.code.toUpperCase() === code.toUpperCase());
+          if (tdItem) tdItem.price = price;
+          updated++;
+        } else { failed++; }
+      }
+    } else { throw new Error('Yahoo API: ' + r.status); }
+  } catch(e) {
+    console.log('Yahoo Finance failed, trying Google Sheets proxy...', e);
+
+    // Method 2: Fallback — use a Google Sheet with GOOGLEFINANCE as proxy
+    // If user has connected a sheet with API key, try reading from a "LivePrices" tab
+    if (D.sheetId && D.apiKey) {
+      try {
+        const base = `https://sheets.googleapis.com/v4/spreadsheets/${D.sheetId}/values`;
+        const r2 = await fetch(`${base}/LivePrices!A:B?key=${D.apiKey}`);
+        if (r2.ok) {
+          const j2 = await r2.json();
+          if (j2.values) {
+            const pm = {};
+            j2.values.forEach(row => { if (row[0] && row[1]) pm[row[0].toUpperCase()] = parseFloat(row[1]); });
+            D.holdings.forEach(h => {
+              const t = (h.ticker || h.name).toUpperCase();
+              for (const [k,v] of Object.entries(pm)) { if (k.includes(t) || t.includes(k)) { h.price = v; updated++; break; } }
+            });
+          }
+        }
+      } catch(e2) { console.log('Sheet proxy also failed', e2); }
+    }
+
+    // Method 3: Last resort — try individual fetches via Google Finance page scraping proxy
+    if (updated === 0) {
+      for (const h of D.holdings) {
+        try {
+          const t = (h.ticker || h.name).replace(/.*:/,'');
+          const r3 = await fetch(`https://www.google.com/finance/quote/${t}:NASDAQ?hl=en`);
+          // This will likely be blocked by CORS, but worth trying
+        } catch(e3) { /* expected */ }
+      }
+    }
+  }
+
+  // Also fetch FX rate alongside
+  try {
+    const fxR = await fetch('https://open.er-api.com/v6/latest/USD');
+    const fxJ = await fxR.json();
+    if (fxJ.rates?.SGD) { D.fx = fxJ.rates.SGD; document.getElementById('fxRate').value = D.fx.toFixed(4); }
+  } catch(e) {}
+
+  renderAll();
+  btn.textContent = '⟳ 刷新行情'; btn.style.opacity = '1';
+  const now = new Date().toLocaleString('zh-CN');
+  document.getElementById('lastUp').textContent = '行情更新于 ' + now;
+
+  if (updated > 0) {
+    stat(`✓ 已更新 ${updated} 个标的实时价格`, 'ok');
+  } else if (failed > 0) {
+    stat('⚠ 获取受限，请用Google Sheet代理方式（见下方说明）', 'err');
+  } else {
+    stat('⚠ 无法直接获取，建议设置Sheet代理', 'err');
+  }
+}
+
+// ═══ LOCAL ═══
+function saveLocal(){const b=new Blob([JSON.stringify(D)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='daoyou_'+new Date().toISOString().slice(0,10)+'.json';a.click();stat('✓ 已保存','ok');}
+function loadLocal(){const i=document.createElement('input');i.type='file';i.accept='.json';i.onchange=async e=>{try{Object.assign(D,JSON.parse(await e.target.files[0].text()));document.getElementById('fxRate').value=D.fx;renderAll();stat('✓ 已加载','ok');}catch(e){stat('格式错误','err');}};i.click();}
+function exportJSON(){navigator.clipboard.writeText(JSON.stringify(D,null,2)).then(()=>stat('✓ 已复制','ok'));}
+
+// ═══ RENDER ═══
+function renderAll(){
+  D.fx=parseFloat(document.getElementById('fxRate').value)||1.277;
+  const hs=D.holdings.map(h=>{const mv=h.qty*h.price;return{...h,mv,pnl:mv-h.qty*h.avg,mvSGD:mv*D.fx};});
+  const tUSD=hs.reduce((s,h)=>s+h.mv,0), tPnL=hs.reduce((s,h)=>s+h.pnl,0), tSGD=tUSD*D.fx, pSGD=tPnL*D.fx;
+  D.wealth[0].amountSGD=Math.round(tSGD);
+  const nw=D.wealth.reduce((s,w)=>s+w.amountSGD,0);
+  document.getElementById('heroAmt').innerHTML=`<span class="currency">SGD</span>$${nw.toLocaleString()}`;
+  const pct=tUSD>0?((tPnL/(tUSD-tPnL))*100).toFixed(2):0;
+  const se=document.getElementById('heroSub');
+  se.textContent=`股票盈利 ${pSGD>=0?'+':''}SGD $${Math.round(Math.abs(pSGD)).toLocaleString()} (${pSGD>=0?'+':''}${pct}%) · 总市值 SGD $${Math.round(tSGD).toLocaleString()} · USD $${Math.round(tUSD).toLocaleString()}`;
+  se.className='sub '+(pSGD>=0?'up':'down');
+  document.getElementById('dcVal').textContent='$'+Math.round(nw/1000)+'K';
+  renderDonut(nw);renderCards(nw);renderH(hs,tUSD);renderAlloc(hs,tUSD);renderTD();renderM();
+}
+function renderDonut(total){
+  const svg=document.getElementById('donut'),leg=document.getElementById('legend');
+  const r=82,circ=2*Math.PI*r;let off=0,sh='',lh='';
+  D.wealth.forEach(w=>{const p=w.amountSGD/total;const dash=circ*p;
+    sh+=`<circle cx="100" cy="100" r="${r}" fill="none" stroke="${w.color}" stroke-opacity="0.8" stroke-width="12" stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-off}" stroke-linecap="round"/>`;off+=dash;
+    lh+=`<div class="legend-item"><div class="legend-dot" style="background:${w.color}"></div><span class="legend-name">${w.icon} ${w.name}</span><span class="legend-val" style="color:${w.color}">$${w.amountSGD.toLocaleString()}</span><span class="legend-pct">${(p*100).toFixed(1)}%</span></div>`;
+  });svg.innerHTML=sh;leg.innerHTML=lh;
+}
+function renderCards(total){document.getElementById('distCards').innerHTML=D.wealth.map(w=>`<div class="dist-card"><div class="bar" style="background:${w.color}"></div><div class="lbl"><span>${w.icon}</span> ${w.name}</div><div class="val" style="color:${w.color}">SGD $${w.amountSGD.toLocaleString()}</div><div class="pct">${(w.amountSGD/total*100).toFixed(1)}% 净资产</div></div>`).join('');}
+function renderH(hs,tUSD){
+  const tm={'CSPX组':'tag-cspx','CSNDX组':'tag-csndx','信号交易':'tag-signal','额外':'tag-extra'};
+  let h='';hs.forEach((x,i)=>{const p=tUSD?(x.mv/tUSD*100).toFixed(1):0;const pc=x.pnl>=0?'green':'red';const s=x.pnl>=0?'+':'';
+    h+=`<tr data-i="${i}"><td>${i+1}</td><td contenteditable="true" data-f="broker">${x.broker}</td><td contenteditable="true" data-f="name">${x.name}</td><td contenteditable="true" data-f="ticker" style="font-size:0.72rem;color:var(--text3)">${x.ticker||''}</td><td><span class="tag ${tm[x.group]||'tag-extra'}">${x.group}</span></td><td class="num" contenteditable="true" data-f="qty">${x.qty}</td><td class="num" contenteditable="true" data-f="price">${x.price.toFixed(2)}</td><td class="num">$${Math.round(x.mv).toLocaleString()}</td><td class="num" style="color:var(--accent)">$${Math.round(x.mvSGD).toLocaleString()}</td><td class="num" contenteditable="true" data-f="avg">${x.avg.toFixed(2)}</td><td class="num ${pc}">${s}$${Math.round(Math.abs(x.pnl)).toLocaleString()}</td><td class="num">${p}%</td><td><span style="cursor:pointer;color:var(--red);opacity:0.5" onclick="rmH(${i})">✕</span></td></tr>`;
+  });
+  const tp=hs.reduce((s,x)=>s+x.pnl,0),ts=hs.reduce((s,x)=>s+x.mvSGD,0);
+  h+=`<tr class="total-row"><td colspan="5">合计</td><td></td><td></td><td class="num">$${Math.round(tUSD).toLocaleString()}</td><td class="num">$${Math.round(ts).toLocaleString()}</td><td></td><td class="num ${tp>=0?'green':'red'}">${tp>=0?'+':''}$${Math.round(Math.abs(tp)).toLocaleString()}</td><td class="num">100%</td><td></td></tr>`;
+  document.getElementById('hBody').innerHTML=h;
+  document.querySelectorAll('#hBody td[contenteditable]').forEach(td=>{
+    td.addEventListener('blur',function(){const idx=+this.closest('tr').dataset.i;const f=this.dataset.f;let v=this.textContent.trim();if(['qty','price','avg'].includes(f))v=parseFloat(v)||0;D.holdings[idx][f]=v;renderAll();});
+    td.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();this.blur();}});
+  });
+}
+function renderAlloc(hs,tUSD){const g={};hs.forEach(h=>{if(h.group!=='额外')g[h.group]=(g[h.group]||0)+h.mv;});
+  document.getElementById('allocBars').innerHTML=D.alloc.map(a=>{const act=tUSD?((g[a.name]||0)/tUSD*100):0;const diff=act-a.target;const ds=(diff>=0?'+':'')+diff.toFixed(1)+'%';const dc=Math.abs(diff)>10?'var(--red)':Math.abs(diff)>5?'var(--amber)':'var(--green)';
+    return`<div class="alloc-row"><span class="alloc-label">${a.name}</span><div class="alloc-bg"><div class="alloc-fill" style="width:${Math.min(act,100)}%;background:linear-gradient(90deg,${a.color}66,${a.color})"><span>${act.toFixed(1)}%</span></div><div class="alloc-target" style="left:${a.target}%" data-t="目标${a.target}%"></div></div><span class="alloc-diff" style="color:${dc}">${ds}</span></div>`;}).join('');
+}
+function renderTD(){document.getElementById('tdBody').innerHTML=D.td.map(t=>{let c='td-0';if(t.td>=7)c='td-9';else if(t.td>=5)c='td-hi';else if(t.td>=1)c='td-low';const dp=(t.dd*100).toFixed(1);const dc=t.dd>.2?'var(--red)':t.dd>.1?'var(--amber)':'var(--green)';
+  return`<tr><td style="font-family:'Outfit';font-weight:600;color:var(--accent)">${t.code}</td><td class="num">${(t.w*100).toFixed(0)}%</td><td class="num" style="font-weight:600">$${t.price.toFixed(2)}</td><td><span class="td-dot ${c}">${t.td}</span></td><td>${t.moat}</td><td><span class="dd-bar"><span class="dd-fill" style="width:${Math.min(dp*2,100)}%;background:${dc}"></span></span><span style="color:${dc}">${dp}%</span></td><td style="color:var(--text3)">${t.adv}</td></tr>`;}).join('');}
+function renderM(){document.getElementById('mGrid').innerHTML=D.monthly.map(m=>`<div class="mcard"><div class="mc-lbl">${m.label}</div><div class="mc-val" style="color:${m.color}">SGD ${m.amount.toLocaleString()}</div></div>`).join('');}
+function addHolding(){D.holdings.push({broker:'IBKR',name:'NEW',group:'信号交易',qty:0,price:0,avg:0,ticker:''});renderAll();setTimeout(()=>{const rows=document.querySelectorAll('#hBody tr[data-i]');const l=rows[rows.length-1];if(l)l.querySelector('td[data-f="name"]').focus();},80);}
+function rmH(i){D.holdings.splice(i,1);renderAll();}
+
+// ══════════════════════════════════════════
+//  6-LAYER IMMERSIVE PARTICLE SYSTEM
+//  Intense sci-fi particles with depth,
+//  trails, connections, floating data,
+//  energy waves, hex grid, mouse interaction.
+// ══════════════════════════════════════════
+(function(){
+  const c=document.getElementById('bg'), ctx=c.getContext('2d');
+  let W,H,t=0,mx=-1e4,my=-1e4;
+  function resize(){W=c.width=innerWidth;H=c.height=innerHeight;}
+  resize();addEventListener('resize',resize);
+  addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+  addEventListener('mouseleave',()=>{mx=-1e4;});
+
+  /* ── Layer 1: Deep space dust (200, tiny, slow) ── */
+  const dust=Array.from({length:200},()=>({
+    x:Math.random()*3000-500, y:Math.random()*3000-500, z:Math.random()*2000+500,
+    vx:(Math.random()-0.5)*0.08, vy:(Math.random()-0.5)*0.08, vz:-Math.random()*0.3-0.1,
+    hue:[170,190,220,260][Math.floor(Math.random()*4)], flicker:Math.random()*6.28
+  }));
+
+  /* ── Layer 2: Mid-field energy particles with trails (120) ── */
+  const mids=Array.from({length:120},()=>mkMid());
+  function mkMid(){return{
+    x:Math.random()*W*1.5-W*0.25, y:Math.random()*H*1.5-H*0.25, z:Math.random()*800+100,
+    vx:(Math.random()-0.5)*0.5, vy:(Math.random()-0.5)*0.5, vz:-Math.random()*1.2-0.3,
+    hue:[170,260,150,45,280][Math.floor(Math.random()*5)],
+    sat:70+Math.random()*20, lit:55+Math.random()*20,
+    size:Math.random()*2+1, alpha:Math.random()*0.5+0.3,
+    trail:[], trailMax:Math.floor(Math.random()*8)+4, pulse:Math.random()*6.28
+  };}
+
+  /* ── Layer 3: Foreground bright particles (40, interactive) ── */
+  const fgs=Array.from({length:40},()=>({
+    x:Math.random()*W, y:Math.random()*H, z:Math.random()*200+10,
+    vx:(Math.random()-0.5)*0.8, vy:(Math.random()-0.5)*0.8, vz:-Math.random()*0.8-0.2,
+    hue:Math.random()>0.5?170:260, size:Math.random()*3+2, alpha:Math.random()*0.4+0.4,
+    orbit:Math.random()*6.28, orbitSpeed:(Math.random()-0.5)*0.01
+  }));
+
+  /* ── Layer 4: Floating data fragments ── */
+  const dataFrags=['$176K','▲0.44%','CSPX','TD:5','BRK.B','60/20/20','SGD','200MA','九转','MSFT','▼27%','MAGS','+$541','NVDA','GOOGL'];
+  const floaters=Array.from({length:15},(_,i)=>({
+    text:dataFrags[i%dataFrags.length],
+    x:Math.random()*W, y:Math.random()*H, z:Math.random()*600+200,
+    vx:(Math.random()-0.5)*0.15, vy:-Math.random()*0.2-0.05, vz:-Math.random()*0.5,
+    alpha:0, targetAlpha:Math.random()*0.1+0.02, fadeSpeed:Math.random()*0.002+0.001, phase:Math.random()*6.28
+  }));
+
+  /* ── Layer 5: Energy waves ── */
+  const waves=[];let wt=0;
+
+  /* ── Layer 6: Hexagonal grid nodes ── */
+  const hexNodes=[];const hs=120;
+  for(let gx=-hs;gx<(W||1920)+hs;gx+=hs)for(let gy=-hs;gy<(H||1080)+hs;gy+=hs*0.866){
+    const off=(Math.floor(gy/(hs*0.866))%2)*hs*0.5;
+    hexNodes.push({x:gx+off,y:gy,ba:Math.random()*0.03+0.008,p:Math.random()*6.28});
+  }
+
+  function proj(x,y,z){const s=600/(600+z);return{sx:(x-W/2)*s+W/2,sy:(y-H/2)*s+H/2,s};}
+  function applyMouse(p,str){if(mx<-1e3)return;const pr=proj(p.x,p.y,p.z);const dx=pr.sx-mx,dy=pr.sy-my,d=Math.sqrt(dx*dx+dy*dy);if(d<200){const f=(1-d/200)*str;p.vx+=dx/d*f;p.vy+=dy/d*f;}}
+  function wrap(p,m){if(p.z<1){p.z=1500+Math.random()*500;p.x=Math.random()*W*1.5-W*0.25;p.y=Math.random()*H*1.5-H*0.25;}if(p.x<-m)p.x=W+m;if(p.x>W+m)p.x=-m;if(p.y<-m)p.y=H+m;if(p.y>H+m)p.y=-m;}
+
+  function frame(){
+    t+=0.016;
+    // Motion blur fade
+    ctx.fillStyle='rgba(11,14,20,0.14)';
+    ctx.fillRect(0,0,W,H);
+
+    // ── Hex grid ──
+    hexNodes.forEach(n=>{
+      n.p+=0.008;let a=n.ba+Math.sin(n.p)*0.012;
+      const dx=n.x-mx,dy=n.y-my,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<250)a+=(1-d/250)*0.05;
+      ctx.beginPath();ctx.arc(n.x,n.y,1.2,0,6.28);
+      ctx.fillStyle=`rgba(100,255,218,${a})`;ctx.fill();
+    });
+
+    // ── Energy waves ──
+    wt+=0.016;
+    if(wt>4+Math.random()*5){wt=0;waves.push({x:Math.random()*W,y:Math.random()*H,r:0,maxR:280+Math.random()*180,a:0.1,hue:Math.random()>0.5?170:260});}
+    for(let i=waves.length-1;i>=0;i--){const w=waves[i];w.r+=2.2;w.a*=0.987;if(w.a<0.002||w.r>w.maxR){waves.splice(i,1);continue;}
+      ctx.beginPath();ctx.arc(w.x,w.y,w.r,0,6.28);ctx.strokeStyle=`hsla(${w.hue},60%,65%,${w.a})`;ctx.lineWidth=1.2;ctx.stroke();
+      ctx.beginPath();ctx.arc(w.x,w.y,w.r*0.7,0,6.28);ctx.strokeStyle=`hsla(${w.hue},60%,70%,${w.a*0.35})`;ctx.lineWidth=0.5;ctx.stroke();
+    }
+
+    // ── Layer 1: Dust ──
+    dust.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;p.z+=p.vz;p.flicker+=0.03;wrap(p,200);
+      const pr=proj(p.x,p.y,p.z);const a=(0.12+Math.sin(p.flicker)*0.06)*pr.s;if(a<0.008)return;
+      ctx.beginPath();ctx.arc(pr.sx,pr.sy,Math.max(0.3,1.1*pr.s),0,6.28);
+      ctx.fillStyle=`hsla(${p.hue},50%,72%,${a})`;ctx.fill();
+    });
+
+    // ── Layer 2: Mid particles + trails ──
+    const midDrawn=[];
+    mids.forEach(p=>{
+      p.pulse+=0.02;applyMouse(p,0.03);p.vx*=0.998;p.vy*=0.998;
+      p.x+=p.vx;p.y+=p.vy;p.z+=p.vz;wrap(p,300);
+      const pr=proj(p.x,p.y,p.z);
+      p.trail.push({x:pr.sx,y:pr.sy});if(p.trail.length>p.trailMax)p.trail.shift();
+      const ba=p.alpha*pr.s*(0.8+Math.sin(p.pulse)*0.2);
+      if(p.trail.length>1)for(let i=0;i<p.trail.length-1;i++){
+        const ta=ba*(i/p.trail.length)*0.28;
+        ctx.beginPath();ctx.moveTo(p.trail[i].x,p.trail[i].y);ctx.lineTo(p.trail[i+1].x,p.trail[i+1].y);
+        ctx.strokeStyle=`hsla(${p.hue},${p.sat}%,${p.lit}%,${ta})`;ctx.lineWidth=p.size*pr.s*0.6;ctx.stroke();
+      }
+      const r=p.size*pr.s;
+      ctx.beginPath();ctx.arc(pr.sx,pr.sy,r*4,0,6.28);ctx.fillStyle=`hsla(${p.hue},60%,60%,${ba*0.07})`;ctx.fill();
+      ctx.beginPath();ctx.arc(pr.sx,pr.sy,r,0,6.28);ctx.fillStyle=`hsla(${p.hue},${p.sat}%,${p.lit}%,${ba})`;ctx.fill();
+      midDrawn.push({sx:pr.sx,sy:pr.sy,a:ba,hue:p.hue});
+    });
+
+    // ── Connections ──
+    for(let i=0;i<midDrawn.length;i++)for(let j=i+1;j<midDrawn.length;j++){
+      const dx=midDrawn[i].sx-midDrawn[j].sx,dy=midDrawn[i].sy-midDrawn[j].sy,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<120){const a=(1-d/120)*0.06*Math.min(midDrawn[i].a,midDrawn[j].a);if(a<0.002)continue;
+        ctx.beginPath();ctx.moveTo(midDrawn[i].sx,midDrawn[i].sy);ctx.lineTo(midDrawn[j].sx,midDrawn[j].sy);
+        ctx.strokeStyle=`hsla(${(midDrawn[i].hue+midDrawn[j].hue)/2},50%,65%,${a})`;ctx.lineWidth=0.4;ctx.stroke();}
+    }
+
+    // ── Layer 3: Foreground bright ──
+    fgs.forEach(p=>{
+      p.orbit+=p.orbitSpeed;applyMouse(p,0.08);p.vx*=0.995;p.vy*=0.995;
+      p.x+=p.vx+Math.cos(p.orbit)*0.3;p.y+=p.vy+Math.sin(p.orbit)*0.3;p.z+=p.vz;wrap(p,100);
+      const pr=proj(p.x,p.y,p.z);const a=p.alpha*pr.s,r=p.size*pr.s;
+      const grad=ctx.createRadialGradient(pr.sx,pr.sy,0,pr.sx,pr.sy,r*7);
+      grad.addColorStop(0,`hsla(${p.hue},60%,82%,${a*0.25})`);
+      grad.addColorStop(0.3,`hsla(${p.hue},50%,65%,${a*0.08})`);
+      grad.addColorStop(1,'transparent');
+      ctx.beginPath();ctx.arc(pr.sx,pr.sy,r*7,0,6.28);ctx.fillStyle=grad;ctx.fill();
+      ctx.beginPath();ctx.arc(pr.sx,pr.sy,r,0,6.28);ctx.fillStyle=`hsla(${p.hue},55%,87%,${a})`;ctx.fill();
+      // Cross flare
+      ctx.save();ctx.globalAlpha=a*0.18;ctx.strokeStyle=`hsla(${p.hue},60%,80%,1)`;ctx.lineWidth=0.5;
+      ctx.beginPath();ctx.moveTo(pr.sx-r*4,pr.sy);ctx.lineTo(pr.sx+r*4,pr.sy);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(pr.sx,pr.sy-r*4);ctx.lineTo(pr.sx,pr.sy+r*4);ctx.stroke();
+      ctx.restore();
+    });
+
+    // ── Layer 4: Floating data ──
+    ctx.font='10px Outfit,monospace';
+    floaters.forEach(f=>{
+      f.x+=f.vx;f.y+=f.vy;f.z+=f.vz;f.phase+=0.01;
+      f.alpha+=(f.targetAlpha-f.alpha)*f.fadeSpeed*60;
+      if(Math.random()<0.001)f.targetAlpha=f.targetAlpha>0.04?0:Math.random()*0.1+0.02;
+      if(f.y<-50){f.y=H+50;f.x=Math.random()*W;}if(f.z<50)f.z=800;
+      const pr=proj(f.x,f.y,f.z);const a=f.alpha*pr.s*(0.7+Math.sin(f.phase)*0.3);if(a<0.004)return;
+      ctx.save();ctx.globalAlpha=a;ctx.fillStyle='hsl(170,50%,68%)';
+      ctx.font=`${Math.max(7,11*pr.s)}px Outfit,monospace`;
+      ctx.fillText(f.text,pr.sx,pr.sy);ctx.restore();
+    });
+
+    // ── Mouse glow ──
+    if(mx>0){const mg=ctx.createRadialGradient(mx,my,0,mx,my,140);
+      mg.addColorStop(0,'rgba(100,255,218,0.03)');mg.addColorStop(0.5,'rgba(129,140,248,0.012)');mg.addColorStop(1,'transparent');
+      ctx.beginPath();ctx.arc(mx,my,140,0,6.28);ctx.fillStyle=mg;ctx.fill();}
+
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+renderAll();
+</script>
+</body>
+</html>

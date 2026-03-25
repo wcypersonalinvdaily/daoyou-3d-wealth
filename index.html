@@ -188,7 +188,7 @@ td[contenteditable="true"]:focus { background:rgba(100,255,218,0.06) !important;
 
   <div class="connector">
     <span style="font-size:0.8rem;color:var(--text3)">Google Sheet</span>
-    <input type="text" id="sheetUrl" placeholder="粘贴 Sheet URL 或 ID">
+    <input type="text" id="sheetUrl" placeholder="粘贴 Sheet URL 或 ID" value="1iO4O7bAy_w5edzR0vvUf2ondYNd3Vii68CKQA2bxDDg">
     <input type="text" id="apiKey" placeholder="API Key (可选)" style="max-width:180px;">
     <button class="btn" onclick="connectSheet()">连接</button>
     <button class="btn" onclick="pullData()">拉取</button>
@@ -312,13 +312,13 @@ const D = {
     { label:'MooMoo储蓄', amount:0, color:'#a78bfa' },
     { label:'GXS储蓄', amount:0, color:'#64ffda' },
   ],
-  sheetId:'', apiKey:''
+  sheetId:'1iO4O7bAy_w5edzR0vvUf2ondYNd3Vii68CKQA2bxDDg', apiKey:''
 };
 
 // ═══ GOOGLE SHEETS ═══
 function extractId(s){const m=s.match(/\/d\/([a-zA-Z0-9_-]+)/);return m?m[1]:(/^[a-zA-Z0-9_-]{20,}$/.test(s.trim())?s.trim():'');}
 function stat(msg,t){const e=document.getElementById('status');e.textContent=msg;e.className='show '+t;setTimeout(()=>e.classList.remove('show'),4000);}
-function connectSheet(){const id=extractId(document.getElementById('sheetUrl').value);if(!id){stat('无效ID','err');return;}D.sheetId=id;D.apiKey=document.getElementById('apiKey').value.trim();stat('✓ 已连接','ok');}
+function connectSheet(){const id=extractId(document.getElementById('sheetUrl').value);if(!id){stat('无效ID','err');return;}D.sheetId=id;D.apiKey=document.getElementById('apiKey').value.trim();stat('✓ 已连接 Investment Sheet','ok');}
 async function pullData(){
   if(!D.sheetId){stat('先连接Sheet','err');return;}stat('拉取中...','info');
   try{
